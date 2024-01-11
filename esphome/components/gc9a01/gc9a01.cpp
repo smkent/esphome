@@ -124,7 +124,7 @@ void HOT GC9A01::draw_absolute_pixel_internal(int x, int y, Color color) {
 
   if (this->eightbitcolor_) {
     const uint32_t color332 = display::ColorUtil::color_to_332(color,
-      display::ColorOrder::COLOR_ORDER_BGR);
+      display::ColorOrder::COLOR_ORDER_RGB);
     uint16_t pos = (x + y * this->get_width_internal());
     this->buffer_[pos] = color332;
   } else {
@@ -234,17 +234,26 @@ void HOT GC9A01::write_display_data_() {
   this->write_byte(GC9A01_RAMWR);
   this->dc_pin_->digital_write(true);
 
+  uint8_t n_lines = 8;
+  unsigned char linebuffer[this->get_width_internal() * 2 * n_lines];
   if (this->eightbitcolor_) {
+    unsigned int i = 0;
     for (size_t line = 0; line < this->get_buffer_length(); line = line + this->get_width_internal()) {
       for (int index = 0; index < this->get_width_internal(); ++index) {
-        auto color332 = display::ColorUtil::to_color(this->buffer_[index + line], display::ColorOrder::COLOR_ORDER_RGB,
+        auto color332 = display::ColorUtil::to_color(this->buffer_[index + line], display::ColorOrder::COLOR_ORDER_BGR,
                                                      display::ColorBitness::COLOR_BITNESS_332, true);
 
         auto color = display::ColorUtil::color_to_565(color332);
-
-        this->write_byte((color >> 8) & 0xff);
-        this->write_byte(color & 0xff);
+        linebuffer[i++] = (color >> 8) & 0xff;
+        linebuffer[i++] = color & 0xff;
       }
+      if (i >= sizeof(linebuffer)) {
+        this->write_array(linebuffer, std::max(i, sizeof(linebuffer)));
+        i = 0;
+      }
+    }
+    if (i > 0) {
+      this->write_array(linebuffer, std::max(i, sizeof(linebuffer)));
     }
   } else {
     this->write_array(this->buffer_, this->get_buffer_length());
