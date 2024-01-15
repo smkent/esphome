@@ -13,6 +13,9 @@ static const char *const TAG = "display";
 void DisplayBuffer::init_internal_(uint32_t buffer_length) {
   ExternalRAMAllocator<uint8_t> allocator(ExternalRAMAllocator<uint8_t>::ALLOW_FAILURE);
   this->buffer_ = allocator.allocate(buffer_length);
+#ifdef USE_GUI
+  this->buffer_length_ = buffer_length;
+#endif
   if (this->buffer_ == nullptr) {
     ESP_LOGE(TAG, "Could not allocate buffer for display!");
     return;
