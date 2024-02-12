@@ -1,6 +1,7 @@
 #pragma once
 
 #include "esphome/core/component.h"
+#include "esphome/core/gpio.h"
 #include "esphome/components/i2c/i2c.h"
 
 namespace esphome {
@@ -9,31 +10,43 @@ namespace i2cx2 {
 static const uint8_t I2Cx2_DISABLE_CHANNELS_COMMAND = 0x00;
 
 class I2Cx2Component;
-class I2Cx2Channel : public i2c::I2CBus {
+class I2Cx2VirtualBus : public Component, public i2c::I2CBus {
  public:
-  void set_channel(uint8_t channel) { channel_ = channel; }
+  void setup() override;
+  void dump_config() override;
+  float get_setup_priority() const override { return setup_priority::BUS - 1; }
+  void update();
+
   void set_parent(I2Cx2Component *parent) { parent_ = parent; }
+  void set_virtual_bus_num(bool virtual_bus_num) { virtual_bus_num_ = virtual_bus_num; }
+  void set_scan(bool scan) { scan_ = scan; }
 
   i2c::ErrorCode readv(uint8_t address, i2c::ReadBuffer *buffers, size_t cnt) override;
   i2c::ErrorCode writev(uint8_t address, i2c::WriteBuffer *buffers, size_t cnt, bool stop) override;
 
  protected:
-  uint8_t channel_;
+  uint8_t virtual_bus_num_{0};
+  bool scan_{true};
   I2Cx2Component *parent_;
 };
 
 class I2Cx2Component : public Component, public i2c::I2CDevice {
  public:
+  void set_pin(GPIOPin *pin) { pin_ = pin; }
+  void set_bus0_pin_state(bool bus0_pin_state) { bus0_pin_state_ = bus0_pin_state; }
+
   void setup() override;
   void dump_config() override;
-  float get_setup_priority() const override { return setup_priority::IO; }
+  float get_setup_priority() const override { return setup_priority::BUS; }
   void update();
 
-  i2c::ErrorCode switch_to_channel(uint8_t channel);
-  void disable_all_channels();
+  void switch_to_virtual_bus(uint8_t virtual_bus_num=0);
 
  protected:
-  friend class I2Cx2Channel;
+  bool bus0_pin_state_;
+  uint8_t active_virtual_bus_num_{0xFF};
+  GPIOPin *pin_;
+  friend class I2Cx2VirtualBus;
 };
 }  // namespace i2cx2
 }  // namespace esphome
