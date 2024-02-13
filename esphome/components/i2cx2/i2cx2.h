@@ -40,7 +40,7 @@ class I2Cx2Component : public Component, public i2c::I2CDevice {
   float get_setup_priority() const override { return setup_priority::BUS; }
   void update();
 
-  void switch_to_virtual_bus(uint8_t virtual_bus_num=0);
+  void switch_to_virtual_bus(uint8_t virtual_bus_num = 0);
 
  protected:
   bool bus0_pin_state_;

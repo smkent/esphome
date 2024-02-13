@@ -50,7 +50,7 @@ async def to_code(config):
 
     for i, virtual_bus in enumerate(config[CONF_VIRTUAL_BUSES]):
         if i > 1:
-            raise Exception("I2Cx2 supports a maximum of two virtual buses")
+            raise cv.Invalid("I2Cx2 supports a maximum of two virtual buses")
         chan = cg.new_Pvariable(virtual_bus[CONF_BUS_ID])
         await cg.register_component(chan, virtual_bus)
         cg.add(chan.set_parent(var))

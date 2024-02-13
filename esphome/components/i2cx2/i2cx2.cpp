@@ -2,7 +2,6 @@
 #include "esphome/core/hal.h"
 #include "esphome/core/log.h"
 
-
 namespace esphome {
 namespace i2cx2 {
 
@@ -65,9 +64,7 @@ void I2Cx2Component::switch_to_virtual_bus(uint8_t virtual_bus_num) {
   if (virtual_bus_num == this->active_virtual_bus_num_) {
     return;
   }
-  bool pin_state = (
-    virtual_bus_num == 0 ? this->bus0_pin_state_ : !this->bus0_pin_state_
-  );
+  bool pin_state = virtual_bus_num == 0 ? this->bus0_pin_state_ : !this->bus0_pin_state_;
   this->pin_->digital_write(pin_state);
   this->active_virtual_bus_num_ = virtual_bus_num;
 }
