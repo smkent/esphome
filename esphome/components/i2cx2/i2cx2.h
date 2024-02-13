@@ -7,8 +7,6 @@
 namespace esphome {
 namespace i2cx2 {
 
-static const uint8_t I2Cx2_DISABLE_CHANNELS_COMMAND = 0x00;
-
 class I2Cx2Component;
 class I2Cx2VirtualBus : public Component, public i2c::I2CBus {
  public:
