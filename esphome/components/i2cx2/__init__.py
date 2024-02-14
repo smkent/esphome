@@ -5,8 +5,13 @@ from esphome.components import i2c
 from esphome.const import CONF_ID, CONF_PIN, CONF_SCAN
 
 try:
-    from esphome.const import CONF_FIRST_BUS_PIN_STATE, CONF_VIRTUAL_BUSES
+    from esphome.const import (
+        CONF_ALWAYS_RESTORE_FIRST_BUS,
+        CONF_FIRST_BUS_PIN_STATE,
+        CONF_VIRTUAL_BUSES,
+    )
 except ImportError:
+    CONF_ALWAYS_RESTORE_FIRST_BUS = "always_restore_first_bus"
     CONF_FIRST_BUS_PIN_STATE = "first_bus_pin_state"
     CONF_VIRTUAL_BUSES = "virtual_buses"
 
@@ -27,6 +32,9 @@ CONFIG_SCHEMA = (
             cv.Optional(CONF_SCAN): cv.invalid("This option has been removed"),
             cv.Required(CONF_PIN): pins.internal_gpio_output_pin_schema,
             cv.Optional(CONF_FIRST_BUS_PIN_STATE, default=True): cv.boolean,
+            cv.Optional(
+                CONF_ALWAYS_RESTORE_FIRST_BUS, default=True
+            ): cv.boolean,
             cv.Optional(CONF_VIRTUAL_BUSES, default=[]): cv.ensure_list(
                 {
                     cv.Required(CONF_BUS_ID): cv.declare_id(I2Cx2VirtualBus),
@@ -47,6 +55,7 @@ async def to_code(config):
     pin = await cg.gpio_pin_expression(config[CONF_PIN])
     cg.add(var.set_pin(pin))
     cg.add(var.set_bus0_pin_state(config[CONF_FIRST_BUS_PIN_STATE]))
+    cg.add(var.set_bus0_restore(config[CONF_ALWAYS_RESTORE_FIRST_BUS]))
 
     for i, virtual_bus in enumerate(config[CONF_VIRTUAL_BUSES]):
         if i > 1:
