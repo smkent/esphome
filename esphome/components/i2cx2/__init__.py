@@ -32,9 +32,7 @@ CONFIG_SCHEMA = (
             cv.Optional(CONF_SCAN): cv.invalid("This option has been removed"),
             cv.Required(CONF_PIN): pins.internal_gpio_output_pin_schema,
             cv.Optional(CONF_FIRST_BUS_PIN_STATE, default=True): cv.boolean,
-            cv.Optional(
-                CONF_ALWAYS_RESTORE_FIRST_BUS, default=True
-            ): cv.boolean,
+            cv.Optional(CONF_ALWAYS_RESTORE_FIRST_BUS, default=True): cv.boolean,
             cv.Optional(CONF_VIRTUAL_BUSES, default=[]): cv.ensure_list(
                 {
                     cv.Required(CONF_BUS_ID): cv.declare_id(I2Cx2VirtualBus),
