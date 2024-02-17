@@ -40,13 +40,17 @@ void I2Cx2VirtualBus::dump_config() {
 i2c::ErrorCode I2Cx2VirtualBus::readv(uint8_t address, i2c::ReadBuffer *buffers, size_t cnt) {
   this->parent_->switch_to_virtual_bus(this->virtual_bus_num_);
   auto err = this->parent_->bus_->readv(address, buffers, cnt);
-  this->parent_->switch_to_virtual_bus();
+  if (this->parent_->bus0_restore_) {
+    this->parent_->switch_to_virtual_bus();
+  }
   return err;
 }
 i2c::ErrorCode I2Cx2VirtualBus::writev(uint8_t address, i2c::WriteBuffer *buffers, size_t cnt, bool stop) {
   this->parent_->switch_to_virtual_bus(this->virtual_bus_num_);
   auto err = this->parent_->bus_->writev(address, buffers, cnt, stop);
-  this->parent_->switch_to_virtual_bus();
+  if (this->parent_->bus0_restore_) {
+    this->parent_->switch_to_virtual_bus();
+  }
   return err;
 }
 
