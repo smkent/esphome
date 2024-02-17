@@ -10,7 +10,7 @@ external_components:
 
 ## GC9A01
 
-Support for GC9A01 chipset roudn LCD modules
+Support for GC9A01 chipset round LCD modules
 
 Collected from PRs referenced within [ESPHome issue #1699][esphome-issue-1699],
 plus some of my own tweaks
