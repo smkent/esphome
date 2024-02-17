@@ -63,6 +63,7 @@ async def setup_gc9a01(var, config):
         )
         cg.add(var.set_writer(lambda_))
 
+
 async def to_code(config):
     var = cg.new_Pvariable(
         config[CONF_ID],
