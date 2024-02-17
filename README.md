@@ -1,9 +1,39 @@
-# ESPHome [![Discord Chat](https://img.shields.io/discord/429907082951524364.svg)](https://discord.gg/KhAMKrd) [![GitHub release](https://img.shields.io/github/release/esphome/esphome.svg)](https://GitHub.com/esphome/esphome/releases/)
+# Custom components for ESPHome
 
-[![ESPHome Logo](https://esphome.io/_images/logo-text.png)](https://esphome.io/)
+Usage in ESPHome:
 
-**Documentation:** https://esphome.io/
+```yaml
+external_components:
+- source: github://smkent/esphome@main
+  components: [ component_1_name, component_2_name, ... ]
+```
 
-For issues, please go to [the issue tracker](https://github.com/esphome/issues/issues).
+## I2Cx2
 
-For feature requests, please see [feature requests](https://github.com/esphome/feature-requests/issues).
+Switch between two I2C data (SDA) lines using an additional GPIO pin and MOSFETs
+
+Adapted from [this StackOverflow
+circuit](https://electronics.stackexchange.com/a/209031) with an added MOSFET as
+a NOT gate (I used 2N7000 MOSFETs):
+
+![Modified circuit diagram](esphome/components/i2cx2/circuit.png)
+
+Example usage:
+
+```yaml
+i2c:
+- id: i2c0
+  sda: 8
+  scl: 9
+  scan: false
+
+i2cx2:
+  i2c_id: i2c0
+  pin: 20
+  first_bus_pin_state: true
+  virtual_buses:
+  - bus_id: i2c0_high
+    scan: true
+  - bus_id: i2c0_low
+    scan: true
+```
