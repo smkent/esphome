@@ -3483,13 +3483,13 @@ display:
       it.printf(1, "%.1f", id(dht_humidity).state);
       it.display_humidity(true);
   - platform: gc9a01
-    cs_pin: 
+    cs_pin:
       allow_other_uses: true
       number: GPIO5
-    dc_pin: 
+    dc_pin:
       allow_other_uses: true
       number: GPIO16
-    reset_pin: 
+    reset_pin:
       allow_other_uses: true
       number: GPIO22
     lambda: |-
