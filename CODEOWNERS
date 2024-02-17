@@ -118,6 +118,7 @@ esphome/components/fingerprint_grow/* @OnFreund @loongyh
 esphome/components/fs3000/* @kahrendt
 esphome/components/ft5x06/* @clydebarrow
 esphome/components/ft63x6/* @gpambrozio
+esphome/components/gc9a01/* @4cello
 esphome/components/gcja5/* @gcormier
 esphome/components/globals/* @esphome/core
 esphome/components/gp8403/* @jesserockz
