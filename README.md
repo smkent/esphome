@@ -80,8 +80,12 @@ i2c:
 
 i2cx2:
   i2c_id: i2c0
+  # Bus selector pin number
   pin: 20
+  # true if the first I2C bus needs the selector pin to be HIGH, false otherwise
   first_bus_pin_state: true
+  # Always reactivate the first virtual bus after using the second virtual bus
+  always_restore_first_bus: true
   virtual_buses:
   - bus_id: i2c0_high
     scan: true

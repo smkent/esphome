@@ -32,6 +32,7 @@ class I2Cx2Component : public Component, public i2c::I2CDevice {
  public:
   void set_pin(GPIOPin *pin) { pin_ = pin; }
   void set_bus0_pin_state(bool bus0_pin_state) { bus0_pin_state_ = bus0_pin_state; }
+  void set_bus0_restore(bool bus0_restore) { bus0_restore_ = bus0_restore; }
 
   void setup() override;
   void dump_config() override;
@@ -42,6 +43,7 @@ class I2Cx2Component : public Component, public i2c::I2CDevice {
 
  protected:
   bool bus0_pin_state_;
+  bool bus0_restore_;
   uint8_t active_virtual_bus_num_{0xFF};
   GPIOPin *pin_;
   friend class I2Cx2VirtualBus;
