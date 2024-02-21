@@ -63,7 +63,7 @@ Switch between two I2C data (SDA) lines using an additional GPIO pin and MOSFETs
 Adapted from [this StackOverflow circuit][so-i2c-multiplex-curcuit]
 with an added MOSFET as a NOT gate (I used 2N7000 MOSFETs):
 
-![Modified circuit diagram](esphome/components/i2cx2/circuit.png)
+![Schematic](esphome/components/i2cx2/schematic.png)
 
 Example usage:
 
