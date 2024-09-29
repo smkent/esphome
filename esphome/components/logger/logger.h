@@ -56,7 +56,9 @@ enum UARTSelection {
 class Logger : public Component {
  public:
   explicit Logger(uint32_t baud_rate, size_t tx_buffer_size);
-
+#ifdef USE_LOGGER_USB_CDC
+  void loop() override;
+#endif
   /// Manually set the baud rate for serial, set to 0 to disable.
   void set_baud_rate(uint32_t baud_rate);
   uint32_t get_baud_rate() const { return baud_rate_; }
@@ -165,6 +167,7 @@ class Logger : public Component {
   CallbackManager<void(int, const char *, const char *)> log_callback_{};
   /// Prevents recursive log calls, if true a log message is already being processed.
   bool recursion_guard_ = false;
+  void *main_task_ = nullptr;
 };
 
 extern Logger *global_logger;  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)

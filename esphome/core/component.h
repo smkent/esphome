@@ -85,7 +85,7 @@ class Component {
 
   /** priority of setup(). higher -> executed earlier
    *
-   * Defaults to 0.
+   * Defaults to setup_priority::DATA, i.e. 600.
    *
    * @return The setup priority of this component
    */
@@ -118,19 +118,19 @@ class Component {
    */
   virtual void mark_failed();
 
-  bool is_failed();
+  bool is_failed() const;
 
-  bool is_ready();
+  bool is_ready() const;
 
   virtual bool can_proceed();
 
-  bool status_has_warning();
+  bool status_has_warning() const;
 
-  bool status_has_error();
+  bool status_has_error() const;
 
-  void status_set_warning();
+  void status_set_warning(const char *message = "unspecified");
 
-  void status_set_error();
+  void status_set_error(const char *message = "unspecified");
 
   void status_clear_warning();
 
