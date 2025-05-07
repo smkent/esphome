@@ -4,6 +4,8 @@ from esphome.components import esp32_rmt, remote_base
 import esphome.config_validation as cv
 from esphome.const import (
     CONF_BUFFER_SIZE,
+    CONF_CARRIER_DUTY_PERCENT,
+    CONF_CARRIER_FREQUENCY,
     CONF_CLOCK_DIVIDER,
     CONF_CLOCK_RESOLUTION,
     CONF_DUMP,
@@ -90,6 +92,14 @@ CONFIG_SCHEMA = remote_base.validate_triggers(
         {
             cv.GenerateID(): cv.declare_id(RemoteReceiverComponent),
             cv.Required(CONF_PIN): cv.All(pins.internal_gpio_input_pin_schema),
+            cv.SplitDefault(CONF_CARRIER_DUTY_PERCENT, esp32_idf=33): cv.All(
+                cv.only_with_esp_idf,
+                cv.percentage_int,
+                cv.Range(min=1, max=100),
+            ),
+            cv.SplitDefault(CONF_CARRIER_FREQUENCY, esp32_idf="0Hz"): cv.All(
+                cv.only_with_esp_idf, cv.frequency, cv.int_
+            ),
             cv.Optional(CONF_DUMP, default=[]): remote_base.validate_dumpers,
             cv.Optional(CONF_TOLERANCE, default="25%"): validate_tolerance,
             cv.SplitDefault(
@@ -158,6 +168,8 @@ async def to_code(config):
                 cg.add(var.set_clock_resolution(config[CONF_CLOCK_RESOLUTION]))
             if CONF_FILTER_SYMBOLS in config:
                 cg.add(var.set_filter_symbols(config[CONF_FILTER_SYMBOLS]))
+            cg.add(var.set_carrier_duty_percent(config[CONF_CARRIER_DUTY_PERCENT]))
+            cg.add(var.set_carrier_frequency(config[CONF_CARRIER_FREQUENCY]))
         else:
             if (rmt_channel := config.get(CONF_RMT_CHANNEL, None)) is not None:
                 var = cg.new_Pvariable(

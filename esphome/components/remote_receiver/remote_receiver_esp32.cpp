@@ -76,6 +76,21 @@ void RemoteReceiverComponent::setup() {
     return;
   }
 
+  if (this->carrier_frequency_ > 0 && 0 < this->carrier_duty_percent_ && this->carrier_duty_percent_ < 100) {
+    rmt_carrier_config_t carrier;
+    memset(&carrier, 0, sizeof(carrier));
+    carrier.frequency_hz = this->carrier_frequency_;
+    carrier.duty_cycle = (float) this->carrier_duty_percent_ / 100.0f;
+    carrier.flags.polarity_active_low = this->pin_->is_inverted();
+    error = rmt_apply_carrier(this->channel_, &carrier);
+    if (error != ESP_OK) {
+      this->error_code_ = error;
+      this->error_string_ = "in rmt_apply_carrier";
+      this->mark_failed();
+      return;
+    }
+  }
+
   rmt_rx_event_callbacks_t callbacks;
   memset(&callbacks, 0, sizeof(callbacks));
   callbacks.on_recv_done = rmt_callback;
@@ -161,6 +176,10 @@ void RemoteReceiverComponent::dump_config() {
   ESP_LOGCONFIG(TAG, "Remote Receiver:");
   LOG_PIN("  Pin: ", this->pin_);
 #if ESP_IDF_VERSION_MAJOR >= 5
+  if (this->carrier_frequency_ > 0 && 0 < this->carrier_duty_percent_ && this->carrier_duty_percent_ < 100) {
+    ESP_LOGCONFIG(TAG, "  Carrier Frequency: %" PRIu32 " hz", this->carrier_frequency_);
+    ESP_LOGCONFIG(TAG, "  Carrier Duty: %u%%", this->carrier_duty_percent_);
+  }
   ESP_LOGCONFIG(TAG, "  Clock resolution: %" PRIu32 " hz", this->clock_resolution_);
   ESP_LOGCONFIG(TAG, "  RMT symbols: %" PRIu32, this->rmt_symbols_);
   ESP_LOGCONFIG(TAG, "  Filter symbols: %" PRIu32, this->filter_symbols_);

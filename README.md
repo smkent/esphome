@@ -93,6 +93,26 @@ i2cx2:
     scan: true
 ```
 
+## Remote receiver with carrier demodulation
 
+On supported ESP32 chips, the [RMT peripheral][esp-idf-esp32c3-rmt] supports
+carrier demodulation. This functionality is exposed via ESP-IDF.
+
+Carrier demodulation is available in the `remote_receiver` component via two new
+configuration keys, `carrier_duty_percent` and `carrier_frequency`. To enable
+carrier demodulation, simple set these values:
+
+```yaml
+remote_receiver:
+- id: ...
+  carrier_duty_percent: 25%
+  carrier_frequency: 25000 Hz
+```
+
+The ESP-IDF RMT documentation suggests a demodulation carrier frequency of
+25000 Hz for infrared signals transmitted at 38000 Hz.
+
+
+[esp-idf-esp32c3-rmt]: https://docs.espressif.com/projects/esp-idf/en/stable/esp32c3/api-reference/peripherals/rmt.html
 [esphome-issue-1699]: https://github.com/esphome/feature-requests/issues/1699
 [so-i2c-multiplex-curcuit]: https://electronics.stackexchange.com/a/209031
