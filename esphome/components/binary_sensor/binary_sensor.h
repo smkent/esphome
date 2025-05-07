@@ -58,7 +58,7 @@ class BinarySensor : public EntityBase, public EntityBase_DeviceClass {
   void publish_initial_state(bool state);
 
   /// The current reported state of the binary sensor.
-  bool state;
+  bool state{false};
 
   void add_filter(Filter *filter);
   void add_filters(const std::vector<Filter *> &filters);
@@ -67,7 +67,7 @@ class BinarySensor : public EntityBase, public EntityBase_DeviceClass {
 
   // ========== INTERNAL METHODS ==========
   // (In most use cases you won't need these)
-  void send_state_internal(bool state, bool is_initial);
+  void send_state_internal(bool state);
 
   /// Return whether this binary sensor has outputted a state.
   virtual bool has_state() const;

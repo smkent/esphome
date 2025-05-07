@@ -1,11 +1,9 @@
 import esphome.config_validation as cv
-from esphome.const import CONF_ANGLE, CONF_MODE
+from esphome.const import CONF_ANGLE, CONF_MODE, CONF_OFFSET_X, CONF_OFFSET_Y
 
 from ..defines import (
     CONF_ANTIALIAS,
     CONF_MAIN,
-    CONF_OFFSET_X,
-    CONF_OFFSET_Y,
     CONF_PIVOT_X,
     CONF_PIVOT_Y,
     CONF_SRC,
@@ -22,8 +20,8 @@ CONF_IMAGE = "image"
 
 BASE_IMG_SCHEMA = cv.Schema(
     {
-        cv.Optional(CONF_PIVOT_X, default="50%"): size,
-        cv.Optional(CONF_PIVOT_Y, default="50%"): size,
+        cv.Optional(CONF_PIVOT_X): size,
+        cv.Optional(CONF_PIVOT_Y): size,
         cv.Optional(CONF_ANGLE): angle,
         cv.Optional(CONF_ZOOM): zoom,
         cv.Optional(CONF_OFFSET_X): size,
@@ -65,10 +63,11 @@ class ImgType(WidgetType):
     async def to_code(self, w: Widget, config):
         if src := config.get(CONF_SRC):
             lv.img_set_src(w.obj, await lv_image.process(src))
-        if (cf_angle := config.get(CONF_ANGLE)) is not None:
-            pivot_x = config[CONF_PIVOT_X]
-            pivot_y = config[CONF_PIVOT_Y]
+        if (pivot_x := config.get(CONF_PIVOT_X)) and (
+            pivot_y := config.get(CONF_PIVOT_Y)
+        ):
             lv.img_set_pivot(w.obj, pivot_x, pivot_y)
+        if (cf_angle := config.get(CONF_ANGLE)) is not None:
             lv.img_set_angle(w.obj, cf_angle)
         if (img_zoom := config.get(CONF_ZOOM)) is not None:
             lv.img_set_zoom(w.obj, img_zoom)
@@ -79,7 +78,7 @@ class ImgType(WidgetType):
         if CONF_ANTIALIAS in config:
             lv.img_set_antialias(w.obj, config[CONF_ANTIALIAS])
         if mode := config.get(CONF_MODE):
-            lv.img_set_mode(w.obj, mode)
+            await w.set_property("size_mode", mode)
 
 
 img_spec = ImgType()

@@ -288,36 +288,36 @@ optional<float> LambdaFilter::new_value(float value) {
 }
 
 // OffsetFilter
-OffsetFilter::OffsetFilter(float offset) : offset_(offset) {}
+OffsetFilter::OffsetFilter(TemplatableValue<float> offset) : offset_(std::move(offset)) {}
 
-optional<float> OffsetFilter::new_value(float value) { return value + this->offset_; }
+optional<float> OffsetFilter::new_value(float value) { return value + this->offset_.value(); }
 
 // MultiplyFilter
-MultiplyFilter::MultiplyFilter(float multiplier) : multiplier_(multiplier) {}
+MultiplyFilter::MultiplyFilter(TemplatableValue<float> multiplier) : multiplier_(std::move(multiplier)) {}
 
-optional<float> MultiplyFilter::new_value(float value) { return value * this->multiplier_; }
+optional<float> MultiplyFilter::new_value(float value) { return value * this->multiplier_.value(); }
 
 // FilterOutValueFilter
-FilterOutValueFilter::FilterOutValueFilter(float value_to_filter_out) : value_to_filter_out_(value_to_filter_out) {}
+FilterOutValueFilter::FilterOutValueFilter(std::vector<TemplatableValue<float>> values_to_filter_out)
+    : values_to_filter_out_(std::move(values_to_filter_out)) {}
 
 optional<float> FilterOutValueFilter::new_value(float value) {
-  if (std::isnan(this->value_to_filter_out_)) {
-    if (std::isnan(value)) {
-      return {};
-    } else {
-      return value;
+  int8_t accuracy = this->parent_->get_accuracy_decimals();
+  float accuracy_mult = powf(10.0f, accuracy);
+  for (auto filter_value : this->values_to_filter_out_) {
+    if (std::isnan(filter_value.value())) {
+      if (std::isnan(value)) {
+        return {};
+      }
+      continue;
     }
-  } else {
-    int8_t accuracy = this->parent_->get_accuracy_decimals();
-    float accuracy_mult = powf(10.0f, accuracy);
-    float rounded_filter_out = roundf(accuracy_mult * this->value_to_filter_out_);
+    float rounded_filter_out = roundf(accuracy_mult * filter_value.value());
     float rounded_value = roundf(accuracy_mult * value);
     if (rounded_filter_out == rounded_value) {
       return {};
-    } else {
-      return value;
     }
   }
+  return value;
 }
 
 // ThrottleFilter
@@ -383,11 +383,12 @@ void OrFilter::initialize(Sensor *parent, Filter *next) {
 
 // TimeoutFilter
 optional<float> TimeoutFilter::new_value(float value) {
-  this->set_timeout("timeout", this->time_period_, [this]() { this->output(this->value_); });
+  this->set_timeout("timeout", this->time_period_, [this]() { this->output(this->value_.value()); });
   return value;
 }
 
-TimeoutFilter::TimeoutFilter(uint32_t time_period, float new_value) : time_period_(time_period), value_(new_value) {}
+TimeoutFilter::TimeoutFilter(uint32_t time_period, TemplatableValue<float> new_value)
+    : time_period_(time_period), value_(std::move(new_value)) {}
 float TimeoutFilter::get_setup_priority() const { return setup_priority::HARDWARE; }
 
 // DebounceFilter
@@ -478,6 +479,29 @@ optional<float> RoundMultipleFilter::new_value(float value) {
     return value - remainderf(value, this->multiple_);
   }
   return value;
+}
+
+optional<float> ToNTCResistanceFilter::new_value(float value) {
+  if (!std::isfinite(value)) {
+    return NAN;
+  }
+  double k = 273.15;
+  // https://de.wikipedia.org/wiki/Steinhart-Hart-Gleichung#cite_note-stein2_s4-3
+  double t = value + k;
+  double y = (this->a_ - 1 / (t)) / (2 * this->c_);
+  double x = sqrt(pow(this->b_ / (3 * this->c_), 3) + y * y);
+  double resistance = exp(pow(x - y, 1 / 3.0) - pow(x + y, 1 / 3.0));
+  return resistance;
+}
+
+optional<float> ToNTCTemperatureFilter::new_value(float value) {
+  if (!std::isfinite(value)) {
+    return NAN;
+  }
+  double lr = log(double(value));
+  double v = this->a_ + this->b_ * lr + this->c_ * lr * lr * lr;
+  double temp = float(1.0 / v - 273.15);
+  return temp;
 }
 
 }  // namespace sensor

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "esphome/core/defines.h"
+#ifdef USE_API
 #include "api_noise_context.h"
 #include "api_pb2.h"
 #include "api_pb2_service.h"
@@ -7,7 +9,6 @@
 #include "esphome/core/automation.h"
 #include "esphome/core/component.h"
 #include "esphome/core/controller.h"
-#include "esphome/core/defines.h"
 #include "esphome/core/log.h"
 #include "list_entities.h"
 #include "subscribe_state.h"
@@ -17,6 +18,12 @@
 
 namespace esphome {
 namespace api {
+
+#ifdef USE_API_NOISE
+struct SavedNoisePsk {
+  psk_t psk;
+} PACKED;  // NOLINT
+#endif
 
 class APIServer : public Component, public Controller {
  public:
@@ -34,6 +41,7 @@ class APIServer : public Component, public Controller {
   void set_reboot_timeout(uint32_t reboot_timeout);
 
 #ifdef USE_API_NOISE
+  bool save_noise_psk(psk_t psk, bool make_active = true);
   void set_noise_psk(psk_t psk) { noise_ctx_->set_psk(psk); }
   std::shared_ptr<APINoiseContext> get_noise_ctx() { return noise_ctx_; }
 #endif  // USE_API_NOISE
@@ -141,6 +149,7 @@ class APIServer : public Component, public Controller {
 
 #ifdef USE_API_NOISE
   std::shared_ptr<APINoiseContext> noise_ctx_ = std::make_shared<APINoiseContext>();
+  ESPPreferenceObject noise_pref_;
 #endif  // USE_API_NOISE
 };
 
@@ -153,3 +162,4 @@ template<typename... Ts> class APIConnectedCondition : public Condition<Ts...> {
 
 }  // namespace api
 }  // namespace esphome
+#endif

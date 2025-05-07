@@ -2,10 +2,6 @@
 
 #include "ble.h"
 
-#ifdef USE_ESP32_VARIANT_ESP32C6
-#include "const_esp32c6.h"
-#endif  // USE_ESP32_VARIANT_ESP32C6
-
 #include "esphome/core/application.h"
 #include "esphome/core/log.h"
 
@@ -26,6 +22,9 @@ namespace esphome {
 namespace esp32_ble {
 
 static const char *const TAG = "esp32_ble";
+
+static RAMAllocator<BLEEvent> EVENT_ALLOCATOR(  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
+    RAMAllocator<BLEEvent>::ALLOW_FAILURE | RAMAllocator<BLEEvent>::ALLOC_INTERNAL);
 
 void ESP32BLE::setup() {
   global_ble = this;
@@ -124,11 +123,7 @@ bool ESP32BLE::ble_setup_() {
   if (esp_bt_controller_get_status() != ESP_BT_CONTROLLER_STATUS_ENABLED) {
     // start bt controller
     if (esp_bt_controller_get_status() == ESP_BT_CONTROLLER_STATUS_IDLE) {
-#ifdef USE_ESP32_VARIANT_ESP32C6
-      esp_bt_controller_config_t cfg = BT_CONTROLLER_CONFIG;
-#else
       esp_bt_controller_config_t cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
-#endif
       err = esp_bt_controller_init(&cfg);
       if (err != ESP_OK) {
         ESP_LOGE(TAG, "esp_bt_controller_init failed: %s", esp_err_to_name(err));
@@ -188,12 +183,20 @@ bool ESP32BLE::ble_setup_() {
     }
   }
 
-  std::string name = App.get_name();
-  if (name.length() > 20) {
+  std::string name;
+  if (this->name_.has_value()) {
+    name = this->name_.value();
     if (App.is_name_add_mac_suffix_enabled()) {
-      name.erase(name.begin() + 13, name.end() - 7);  // Remove characters between 13 and the mac address
-    } else {
-      name = name.substr(0, 20);
+      name += "-" + get_mac_address().substr(6);
+    }
+  } else {
+    name = App.get_name();
+    if (name.length() > 20) {
+      if (App.is_name_add_mac_suffix_enabled()) {
+        name.erase(name.begin() + 13, name.end() - 7);  // Remove characters between 13 and the mac address
+      } else {
+        name = name.substr(0, 20);
+      }
     }
   }
 
@@ -314,7 +317,8 @@ void ESP32BLE::loop() {
       default:
         break;
     }
-    delete ble_event;  // NOLINT(cppcoreguidelines-owning-memory)
+    ble_event->~BLEEvent();
+    EVENT_ALLOCATOR.deallocate(ble_event, 1);
     ble_event = this->ble_events_.pop();
   }
   if (this->advertising_ != nullptr) {
@@ -323,9 +327,14 @@ void ESP32BLE::loop() {
 }
 
 void ESP32BLE::gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param) {
-  BLEEvent *new_event = new BLEEvent(event, param);  // NOLINT(cppcoreguidelines-owning-memory)
+  BLEEvent *new_event = EVENT_ALLOCATOR.allocate(1);
+  if (new_event == nullptr) {
+    // Memory too fragmented to allocate new event. Can only drop it until memory comes back
+    return;
+  }
+  new (new_event) BLEEvent(event, param);
   global_ble->ble_events_.push(new_event);
-}  // NOLINT(clang-analyzer-cplusplus.NewDeleteLeaks)
+}  // NOLINT(clang-analyzer-unix.Malloc)
 
 void ESP32BLE::real_gap_event_handler_(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param) {
   ESP_LOGV(TAG, "(BLE) gap_event_handler - %d", event);
@@ -336,9 +345,14 @@ void ESP32BLE::real_gap_event_handler_(esp_gap_ble_cb_event_t event, esp_ble_gap
 
 void ESP32BLE::gatts_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_if,
                                    esp_ble_gatts_cb_param_t *param) {
-  BLEEvent *new_event = new BLEEvent(event, gatts_if, param);  // NOLINT(cppcoreguidelines-owning-memory)
+  BLEEvent *new_event = EVENT_ALLOCATOR.allocate(1);
+  if (new_event == nullptr) {
+    // Memory too fragmented to allocate new event. Can only drop it until memory comes back
+    return;
+  }
+  new (new_event) BLEEvent(event, gatts_if, param);
   global_ble->ble_events_.push(new_event);
-}  // NOLINT(clang-analyzer-cplusplus.NewDeleteLeaks)
+}  // NOLINT(clang-analyzer-unix.Malloc)
 
 void ESP32BLE::real_gatts_event_handler_(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_if,
                                          esp_ble_gatts_cb_param_t *param) {
@@ -350,9 +364,14 @@ void ESP32BLE::real_gatts_event_handler_(esp_gatts_cb_event_t event, esp_gatt_if
 
 void ESP32BLE::gattc_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if,
                                    esp_ble_gattc_cb_param_t *param) {
-  BLEEvent *new_event = new BLEEvent(event, gattc_if, param);  // NOLINT(cppcoreguidelines-owning-memory)
+  BLEEvent *new_event = EVENT_ALLOCATOR.allocate(1);
+  if (new_event == nullptr) {
+    // Memory too fragmented to allocate new event. Can only drop it until memory comes back
+    return;
+  }
+  new (new_event) BLEEvent(event, gattc_if, param);
   global_ble->ble_events_.push(new_event);
-}  // NOLINT(clang-analyzer-cplusplus.NewDeleteLeaks)
+}  // NOLINT(clang-analyzer-unix.Malloc)
 
 void ESP32BLE::real_gattc_event_handler_(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if,
                                          esp_ble_gattc_cb_param_t *param) {

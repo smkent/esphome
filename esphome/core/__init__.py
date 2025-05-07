@@ -54,16 +54,6 @@ class HexInt(int):
         return f"{sign}0x{value:X}"
 
 
-class IPAddress:
-    def __init__(self, *args):
-        if len(args) != 4:
-            raise ValueError("IPAddress must consist of 4 items")
-        self.args = args
-
-    def __str__(self):
-        return ".".join(str(x) for x in self.args)
-
-
 class MACAddress:
     def __init__(self, *parts):
         if len(parts) != 6:
@@ -485,7 +475,6 @@ class EsphomeCore:
         self.dashboard = False
         # True if command is run from vscode api
         self.vscode = False
-        self.ace = False
         # The name of the node
         self.name: Optional[str] = None
         # The friendly name of the node
@@ -529,6 +518,8 @@ class EsphomeCore:
         self.verbose = False
         # Whether ESPHome was started in quiet mode
         self.quiet = False
+        # A list of all known ID classes
+        self.id_classes = {}
 
     def reset(self):
         from esphome.pins import PIN_SCHEMA_REGISTRY
@@ -592,7 +583,7 @@ class EsphomeCore:
 
     @property
     def config_dir(self):
-        return os.path.dirname(self.config_path)
+        return os.path.abspath(os.path.dirname(self.config_path))
 
     @property
     def data_dir(self):
@@ -699,7 +690,7 @@ class EsphomeCore:
         _LOGGER.debug("Adding: %s", expression)
         return expression
 
-    def add_global(self, expression):
+    def add_global(self, expression, prepend=False):
         from esphome.cpp_generator import Expression, Statement, statement
 
         if isinstance(expression, Expression):
@@ -708,7 +699,10 @@ class EsphomeCore:
             raise ValueError(
                 f"Add '{expression}' must be expression or statement, not {type(expression)}"
             )
-        self.global_statements.append(expression)
+        if prepend:
+            self.global_statements.insert(0, expression)
+        else:
+            self.global_statements.append(expression)
         _LOGGER.debug("Adding global: %s", expression)
         return expression
 
